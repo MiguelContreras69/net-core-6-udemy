@@ -12,9 +12,12 @@ namespace Rocosa.Controllers
     public class ProductoController : Controller
     {
         private readonly ApplicationDbContext _db;
-        public ProductoController(ApplicationDbContext db)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public ProductoController(ApplicationDbContext db, IWebHostEnvironment webHostEnvironment)
         {
             _db = db;
+            _webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Index()
         {
@@ -23,32 +26,21 @@ namespace Rocosa.Controllers
             return View(lista);
         }
 
-        public IActionResult Upsert(int? id) 
+        public IActionResult Upsert(int? id)
         {
-            //IEnumerable<SelectListItem> categoriaDropDown = _db.Categoria.Select(c => new SelectListItem 
-            //{
-            //    Text = c.NombreCategoria,
-            //    Value = c.Id.ToString()          
-            //});
-
-            //ViewBag.categoriaDropDown = categoriaDropDown;
-
-            //Producto producto = new Producto();
-
-
-            ProductoVM productoVM = new ProductoVM() 
+            ProductoVM productoVM = new ProductoVM()
             {
-              Producto =new Producto(),
-              CategoriaLista = _db.Categoria.Select(c => new SelectListItem 
-              { 
-                 Text = c.NombreCategoria,
-                 Value = c.Id.ToString(),        
-              }),
-              TipoAplicacionLista =  _db.TipoAplicacion.Select(d => new SelectListItem
-              {
-                 Text = d.Nombre,
-                 Value = d.Id.ToString()
-              })
+                Producto = new Producto(),
+                CategoriaLista = _db.Categoria.Select(c => new SelectListItem
+                {
+                    Text = c.NombreCategoria,
+                    Value = c.Id.ToString(),
+                }),
+                TipoAplicacionLista = _db.TipoAplicacion.Select(d => new SelectListItem
+                {
+                    Text = d.Nombre,
+                    Value = d.Id.ToString()
+                })
             };
 
 
@@ -64,8 +56,40 @@ namespace Rocosa.Controllers
                 {
                     return NotFound();
                 }
-                return View(productoVM);  
+                return View(productoVM);
             }
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Upsert(ProductoVM productoVM)
+        {
+            if (ModelState.IsValid)
+            {
+                var files = HttpContext.Request.Form.Files;
+                string webRootPath = _webHostEnvironment.WebRootPath;
+                if (productoVM.Producto.Id == 0)
+                {
+                    // crear
+                    string upload = webRootPath + WC.ImagenRuta;
+                    string fileName = Guid.NewGuid().ToString();
+                    string extension = Path.GetExtension(files[0].FileName);
+
+                    using (var fileStream = new FileStream(Path.Combine(upload,fileName+extension),FileMode.Create))
+                    {
+                        files[0].CopyTo(fileStream);
+                    }
+                    productoVM.Producto.ImagenUrl = fileName + extension;
+                    _db.Producto.Add(productoVM.Producto);
+                }
+                else
+                {
+                    // actualizar
+                }
+            }
+            return View(productoVM);
+
         }
     }
 }

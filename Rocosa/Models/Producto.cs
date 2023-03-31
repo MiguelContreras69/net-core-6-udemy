@@ -20,18 +20,18 @@ namespace Rocosa.Models
         [Range(1,double.MaxValue,ErrorMessage ="El precio debe ser mayor a cero")]
         public double Precio { get; set; }
 
-        public string ImagenUrl { get; set; }
+        public string? ImagenUrl { get; set; }
 
         //foreign key
         public int CategoriaId { get; set; }
 
         [ForeignKey("CategoriaId")]
-        public virtual Categoria Categoria { get; set; }
+        public virtual Categoria? Categoria { get; set; }
 
         public int TipoAplicacionId { get; set; }
 
         [ForeignKey("TipoAplicacionId")]
-        public virtual TipoAplicacion TipoAplicacion { get; set; }
+        public virtual TipoAplicacion? TipoAplicacion { get; set; }
 
 
 
